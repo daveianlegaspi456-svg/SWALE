@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Swale - LW6 Interactive Low-Fidelity Prototype</title>
+<style>
+:root{--bg:#f2f2f2;--card:#fff;--ink:#222;--mute:#666;--line:#888;--fill:#ddd;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1b1b;--card:#262626;--ink:#eee;--mute:#aaa;--line:#999;--fill:#3a3a3a}}
+:root[data-theme="dark"]{--bg:#1b1b1b;--card:#262626;--ink:#eee;--mute:#aaa;--line:#999;--fill:#3a3a3a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 Arial,Helvetica,sans-serif}
+.app{max-width:480px;margin:0 auto;background:var(--card);min-height:100vh;border-left:2px solid var(--line);border-right:2px solid var(--line)}
+.flow{background:var(--fill);padding:6px 12px;font-size:13px;border-bottom:2px solid var(--line)}
+nav{display:flex;border-bottom:2px solid var(--line)}
+nav button{flex:1;border:0;border-right:1px solid var(--line);background:var(--card);color:var(--ink);padding:12px 4px;font-size:15px;cursor:pointer}
+nav button:last-child{border-right:0}
+nav button.on{background:var(--fill);font-weight:700;text-decoration:underline}
+.screen{display:none;padding:16px}.screen.on{display:block}
+h1{font-size:22px;margin:0 0 4px}h2{font-size:18px;margin:16px 0 6px}
+p.h{color:var(--mute);margin:0 0 12px;font-size:14px}
+label{display:block;font-weight:700;margin:12px 0 4px;font-size:14px}
+input,select,textarea{width:100%;padding:10px;border:2px solid var(--line);background:var(--card);color:var(--ink);font-size:16px;border-radius:2px}
+button.b{padding:12px 14px;border:2px solid var(--ink);background:var(--card);color:var(--ink);font-size:16px;cursor:pointer;border-radius:2px}
+button.b:disabled{opacity:.5;cursor:default}
+button.p{background:var(--ink);color:var(--card);font-weight:700}
+button.b:focus,input:focus,select:focus,nav button:focus{outline:3px solid var(--ink);outline-offset:2px}
+.row{display:flex;gap:8px;margin-top:12px}.row>*{flex:1}
+.box{border:2px solid var(--line);padding:12px;margin:10px 0;border-radius:2px}
+.img{background:var(--fill);border:2px dashed var(--line);height:130px;display:flex;align-items:center;justify-content:center;color:var(--mute);font-size:14px;margin-bottom:8px}
+.tag{display:inline-block;border:1px solid var(--ink);padding:1px 8px;font-size:13px;margin-right:4px}
+.msg{padding:8px 10px;margin:6px 0;border:1px solid var(--line);max-width:80%}
+.msg.me{margin-left:auto;background:var(--fill)}
+.fb{border:2px solid var(--ink);padding:10px;margin:10px 0;font-size:14px;display:none}
+.fb.on{display:block}
+.err{color:var(--ink);font-weight:700;font-size:14px;display:none;margin-top:4px}.err.on{display:block}
+.big{font-size:26px;font-weight:700}
+.link{background:none;border:0;color:var(--ink);text-decoration:underline;cursor:pointer;font-size:15px;padding:8px 0}
+table{width:100%;border-collapse:collapse;font-size:15px}td{border-bottom:1px solid var(--line);padding:6px 2px}td:last-child{text-align:right}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="flow" id="flow" aria-live="polite"></div>
+<nav id="nav" hidden aria-label="Main navigation">
+ <button data-go="browse">Browse</button><button data-go="chat">Messages</button><button data-go="activity">My Activity</button><button data-go="login">Log out</button>
+</nav>
+
+<!-- 1 LOGIN FR-001/002 -->
+<section class="screen on" id="login">
+ <h1>Swale</h1><p class="h">Item sale and swap for Caraga State University</p>
+ <label for="em">CSU email</label><input id="em" type="email" value="student@carsu.edu.ph" autocomplete="off">
+ <div class="err" id="emerr" role="alert">Error: Use your official CSU email (@carsu.edu.ph).</div>
+ <label for="pw">Password</label><input id="pw" type="password" value="password">
+ <div class="row"><button class="b p" id="doLogin">Log in</button></div>
+ <button class="link" id="forgot">Forgot password?</button> <button class="link" id="reg">Register with CSU email</button>
+ <div class="fb" id="loginfb" role="status"></div>
+</section>
+
+<!-- 2 BROWSE FR-005 -->
+<section class="screen" id="browse">
+ <h1>Browse listings</h1><p class="h">Search, then open a listing.</p>
+ <label for="q">Search</label><input id="q" placeholder="e.g. keyboard, calculator">
+ <div class="row"><div><label for="cat">Category</label><select id="cat"><option>All</option><option>Electronics</option><option>Books</option><option>Supplies</option></select></div>
+ <div><label for="typ">Type</label><select id="typ"><option value="all">All</option><option value="swap">Swap</option><option value="sale">Sale</option></select></div></div>
+ <div class="row"><button class="b p" id="doSearch">Apply search and filters</button></div>
+ <p id="count" class="h" style="margin-top:10px" role="status"></p>
+ <div id="cards"></div>
+</section>
+
+<!-- 3 DETAIL FR-003/010 -->
+<section class="screen" id="detail">
+ <button class="link" data-go="browse">&larr; Back to listings</button>
+ <div class="img">[ Photo: Mechanical keyboard ]</div>
+ <h1>Mechanical Keyboard</h1>
+ <span class="tag">Swap</span><span class="tag">Electronics</span><span class="tag">Condition: Good (4/5)</span>
+ <div class="box"><b>Description</b><br>87-key keyboard, all keys working. Looking to swap for a scientific calculator or drawing set.<br><small>Listed by: J. Dela Cruz (verified CSU student) &middot; Status: Available</small></div>
+ <div class="row"><button class="b p" data-go="swap">Propose swap</button><button class="b" data-go="chat">Message seller</button></div>
+ <button class="link" id="report">Report this listing</button>
+ <div class="fb" id="repfb" role="status">Report received. An admin will review this listing.</div>
+</section>
+
+<!-- 4 SWAP + TOP-UP FR-007/008 -->
+<section class="screen" id="swap">
+ <button class="link" data-go="detail">&larr; Back to listing</button>
+ <h1>Propose swap</h1><p class="h">Choose what you will offer. Swale suggests a fair top-up.</p>
+ <label for="mine">Your item to offer</label>
+ <select id="mine"><option value="600">Scientific Calculator - Good - est. P600</option><option value="450">Drawing Set - Like new - est. P450</option><option value="1200">Used Tablet - Fair - est. P1,200</option></select>
+ <div class="box"><b>Fair top-up calculation</b>
+  <table><tr><td>Their item: Mechanical Keyboard (Good)</td><td>P1,200</td></tr>
+  <tr><td>Your item</td><td id="mv">P600</td></tr>
+  <tr><td><b>Suggested top-up</b> <small id="who"></small></td><td class="big" id="sug">P600</td></tr></table>
+  <small>Based on category and condition in the reference price table.</small></div>
+ <label for="adj">Adjust top-up (optional)</label><input id="adj" type="number" min="0" step="10" value="600">
+ <div class="row"><button class="b" id="reset">Reset to suggestion</button></div>
+ <div class="fb on" id="adjfb" role="status">Using the system-suggested amount.</div>
+ <div class="row"><button class="b p" id="send">Send swap proposal</button><button class="b" data-go="detail">Cancel</button></div>
+</section>
+
+<!-- 5 CHAT FR-006 -->
+<section class="screen" id="chat">
+ <h1>Messages</h1><p class="h">About: Mechanical Keyboard (swap) &middot; with J. Dela Cruz</p>
+ <div class="box" id="log" style="min-height:150px">
+  <div class="msg">Hi! Is the keyboard still available?</div>
+  <div class="msg me">Yes, still available. Send me your swap proposal.</div></div>
+ <label for="mi">Your message</label><input id="mi" placeholder="Type a message">
+ <div class="row"><button class="b p" id="sm">Send</button><button class="b" data-go="detail">View listing</button></div>
+</section>
+
+<!-- 6 CONFIRM FR-009 -->
+<section class="screen" id="confirm">
+ <h1>Swap proposal sent</h1>
+ <div class="fb on" role="status"><b>Success:</b> Your proposal was sent to the seller. Status: Pending.</div>
+ <div class="box"><b>Summary</b>
+  <table><tr><td>You give</td><td id="cg">Scientific Calculator</td></tr><tr><td>You get</td><td>Mechanical Keyboard</td></tr><tr><td>Top-up you pay</td><td id="ct">P600</td></tr><tr><td>Status</td><td><span class="tag">Pending</span></td></tr></table></div>
+ <div class="row"><button class="b p" data-go="activity">Go to My Activity</button><button class="b" data-go="chat">Message seller</button></div>
+</section>
+
+<!-- 7 ACTIVITY FR-009/012 -->
+<section class="screen" id="activity">
+ <h1>My Activity</h1><p class="h">Update status of your listings and transactions.</p>
+ <div class="box"><b id="atitle">Swap: Scientific Calculator for Mechanical Keyboard</b><br><small id="atop">Top-up: P600</small><br>
+  Status: <span class="tag" id="st">Pending</span>
+  <div class="row"><button class="b p" id="done">Mark as Completed</button></div></div>
+ <div class="fb" id="donefb" role="status">Status updated to Completed. Saved to your history.</div>
+ <h2>History (read-only)</h2>
+ <div class="box" id="hist"><small>Sold: Used textbook - P250 - Completed</small></div>
+ <div class="row"><button class="b" data-go="browse">Back to Browse</button></div>
+</section>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const steps={login:"Step 1 of 7 - Log in",browse:"Step 2 of 7 - Browse",detail:"Step 3 of 7 - Listing detail",swap:"Step 4 of 7 - Propose swap and top-up",chat:"Optional - Message the seller",confirm:"Step 5 of 7 - Confirmation",activity:"Step 6 of 7 - Track status"};
+function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('on',s.id===id));
+ $('flow').textContent="Core workflow: "+steps[id];$('nav').hidden=(id==='login');
+ document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.go===id));scrollTo(0,0)}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-go]');if(t)go(t.dataset.go)});
+// login
+$('doLogin').onclick=()=>{const ok=/@carsu\.edu\.ph$/i.test($('em').value.trim());$('emerr').classList.toggle('on',!ok);if(ok)go('browse')};
+$('forgot').onclick=()=>{$('loginfb').textContent="A password reset link was sent to your CSU email.";$('loginfb').classList.add('on')};
+$('reg').onclick=()=>{$('loginfb').textContent="Registration (prototype note): enter CSU email, then confirm using the link sent to it.";$('loginfb').classList.add('on')};
+// browse
+const items=[["Mechanical Keyboard","swap","Electronics","Good","P1,200 value","detail"],["Calculus Textbook","sale","Books","Like new","P350","detail"],["Drawing Set","swap","Supplies","Good","P450 value","detail"]];
+function render(){const q=$('q').value.toLowerCase(),t=$('typ').value,c=$('cat').value;
+ const r=items.filter(i=>(!q||i[0].toLowerCase().includes(q))&&(t==='all'||i[1]===t)&&(c==='All'||i[2]===c));
+ $('count').textContent=r.length+" listing(s) found";
+ $('cards').innerHTML=r.map(i=>`<div class="box"><div class="img" style="height:60px">[ Photo ]</div><b>${i[0]}</b><br><span class="tag">${i[1]==='swap'?'Swap':'Sale'}</span><span class="tag">${i[2]}</span><span class="tag">${i[3]}</span><br><small>${i[4]}</small><div class="row"><button class="b p" data-go="detail">View listing</button></div></div>`).join('')||'<div class="box">No listings match. Try clearing the filters.</div>'}
+$('doSearch').onclick=render;render();
+$('report').onclick=()=>$('repfb').classList.add('on');
+// swap
+let topUp=600;const peso=n=>"P"+Number(n).toLocaleString();
+function calc(){const v=+$('mine').value,d=1200-v;topUp=d;$('mv').textContent=peso(v);$('sug').textContent=peso(d);$('who').textContent=d>0?"(you pay)":"";$('adj').value=d;$('adjfb').textContent="Using the system-suggested amount."}
+$('mine').onchange=calc;$('reset').onclick=calc;
+$('adj').oninput=()=>{topUp=+$('adj').value||0;$('adjfb').textContent="You adjusted the top-up to "+peso(topUp)+". The seller must agree."};
+$('send').onclick=()=>{$('cg').textContent=$('mine').selectedOptions[0].text.split(' - ')[0];$('ct').textContent=peso(topUp);$('atitle').textContent='Swap: '+$('cg').textContent+' for Mechanical Keyboard';$('atop').textContent="Top-up: "+peso(topUp);go('confirm')};
+// chat
+$('sm').onclick=()=>{const v=$('mi').value.trim();if(!v)return;$('log').insertAdjacentHTML('beforeend','<div class="msg me"></div>');$('log').lastChild.textContent=v;$('mi').value=''};
+// status
+$('done').onclick=()=>{$('st').textContent="Completed";$('donefb').classList.add('on');$('done').disabled=true;$('hist').insertAdjacentHTML('afterbegin','<small>'+$('atitle').textContent+' - '+peso(topUp)+' top-up - Completed</small><br>')};
+go('login');
+</script>
+</body>
+</html>
